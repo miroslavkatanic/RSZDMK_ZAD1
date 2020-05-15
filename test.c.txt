@@ -1,0 +1,202 @@
+#include <LiquidCrystal.h>
+#include <util/delay.h>
+#include <stdlib.h>
+
+LiquidCrystal lcd(A0, A1, A2, A3, A4, A5);
+
+char ocitaj_taster()
+{
+  char taster = 0;
+  unsigned char row;
+  
+  MCUCR &= ~0x10;
+  PORTD = 0x0f; 
+  
+  for(row = 0x80; row != 0x08; row >>= 1)
+  {
+    DDRD = row;
+	_delay_ms(2);
+    
+    switch(row | ((~PIND) & 0x0f))
+    {
+      case 0x88:
+      	taster = '1'; break;
+      case 0x84:
+      	taster = '2'; break;
+      case 0x82:
+      	taster = '3'; break;
+      case 0x81:
+      	taster = 'A'; break;
+		
+	  case 0x48:
+      	taster = '4'; break;
+      case 0x44:
+      	taster = '5'; break;
+      case 0x42:
+      	taster = '6'; break;
+      case 0x41:
+      	taster = 'B'; break;
+		
+	  case 0x28:
+      	taster = '7'; break;
+      case 0x24:
+      	taster = '8'; break;
+      case 0x22:
+      	taster = '9'; break;
+      case 0x21:
+      	taster = 'C'; break;
+		
+	  case 0x18:
+      	taster = '*'; break;
+      case 0x14:
+      	taster = '0'; break;
+      case 0x12:
+      	taster = '#'; break;
+      case 0x11:
+      	taster = 'D'; break;
+    }
+  }
+  
+  return taster;
+}
+byte herc[8]{
+  B01000 ,
+  B11100 ,
+  B01110 ,
+  B00111 ,
+  B01110 ,
+  B11100 ,
+  B01000 ,
+};
+
+byte karo[8]{
+  B00100 ,
+  B00100 ,
+  B01110 ,
+  B11111 ,
+  B01110 ,
+  B01100 ,
+  B00100 ,
+};
+
+byte pik[8]{
+  B00100 ,
+  B01100 ,
+  B01110 ,
+  B01110 ,
+  B01110 ,
+  B10101 ,
+  B00100 ,
+};
+
+byte tref[8]{
+  B01110 ,
+  B01100 ,
+  B11111 ,
+  B01110 ,
+  B11111 ,
+  B00101 ,
+  B00100 ,
+};
+
+char karte[5] = {herc[8], karo[8], pik[8], tref[8]};
+char karta[5];
+int index = 0;
+int n = 0;
+int dozvola = 1;
+
+int generisanje(int min,int max)
+{
+int distance,x,slucajno;
+  distance = max - min;
+  slucajno = rand();
+  
+  x = slucajno % distance;
+  return x+min;
+
+}
+int x = 0, y = 0;
+int main()
+{
+  lcd.createChar(0, herc);
+  lcd.createChar(1, karo);
+  lcd.createChar(2, pik);
+  lcd.createChar(3, tref);
+  	lcd.begin(16, 2);
+  lcd.print("Pritisnite *");
+  
+  					/*for (int i = 0; i < 4; i++) 
+                  {
+                      
+                      n = rand()% 4;
+                      
+                      switch(n)
+                      {
+                        case 0:
+                          //lcd.print(karte[n]);
+                          karta[index++] = karte[0];
+                          break;
+                        case 1:
+                         // lcd.print(karte[n]);
+                          karta[index++] = karte[1];
+                          break;
+                        case 2:
+                         // lcd.print(karte[n]);
+                          karta[index++] = karte[2];
+                          break;
+                        case 3:
+                        //  lcd.print(karte[n]);
+                          karta[index++] = karte[3];
+                          break;
+                        }
+          
+       		 		}*/
+  karta[0] = generisanje(0, 3);
+  karta[1] = generisanje(0, 3);
+  karta[2] = generisanje(0, 3);
+  karta[3] = generisanje(0, 3);
+    
+	while(1)
+    {
+      //lcd.write(byte(0));
+      
+    		
+		
+      
+	  char taster = ocitaj_taster();
+      if (taster != 0 && dozvola)
+      {
+        dozvola = 0;
+            if(taster == '*')
+            {
+                 lcd.clear();
+                 //lcd.print(karta);
+              int karta1 = generisanje(0,3);
+     		  int karta2 = generisanje(0,3);
+     		  int karta3 = generisanje(0,3);
+     		  int karta4 = generisanje(0,3);
+
+               lcd.write(byte(karta1));
+               lcd.write(byte(karta2));
+               lcd.write(byte(karta3));
+               lcd.write(byte(karta4));
+              	_delay_ms(2000);
+              lcd.clear();
+        		for(int i = 0; i < 4; i++)
+                {
+                  lcd.print("-");
+                }
+              
+      		}
+        lcd.setCursor(x, y);
+              if(taster == '2')
+                x--;
+              if(taster == '4')
+                x++;
+    }else if(!taster)
+        dozvola = 1;
+    
+    }
+  	
+  	return 0;
+}
